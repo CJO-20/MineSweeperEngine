@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		83A7FAA41DCA967E00994032 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 83A7FAA31DCA967E00994032 /* main.cpp */; };
+		83A7FAAC1DCA96EC00994032 /* Game.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 83A7FAAA1DCA96EC00994032 /* Game.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -24,7 +24,8 @@
 
 /* Begin PBXFileReference section */
 		83A7FAA01DCA967E00994032 /* MineSweeperEngine */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = MineSweeperEngine; sourceTree = BUILT_PRODUCTS_DIR; };
-		83A7FAA31DCA967E00994032 /* main.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = "<group>"; };
+		83A7FAAA1DCA96EC00994032 /* Game.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = Game.cpp; sourceTree = "<group>"; };
+		83A7FAAB1DCA96EC00994032 /* Game.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Game.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -57,7 +58,8 @@
 		83A7FAA21DCA967E00994032 /* MineSweeperEngine */ = {
 			isa = PBXGroup;
 			children = (
-				83A7FAA31DCA967E00994032 /* main.cpp */,
+				83A7FAAA1DCA96EC00994032 /* Game.cpp */,
+				83A7FAAB1DCA96EC00994032 /* Game.h */,
 			);
 			path = MineSweeperEngine;
 			sourceTree = "<group>";
@@ -118,7 +120,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				83A7FAA41DCA967E00994032 /* main.cpp in Sources */,
+				83A7FAAC1DCA96EC00994032 /* Game.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -237,6 +239,7 @@
 				83A7FAA91DCA967E00994032 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
