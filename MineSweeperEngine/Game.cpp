@@ -14,64 +14,60 @@ int main (int argc, char** argv)
 {
     int rows, cols, numMines;
     
-    cout << "Minesweeper V1.0" << endl << endl;
+    cout << "Minesweeper V2.0" << endl << endl;
     cout << "# Rows: ";
     cin >> rows;
     cin.ignore();
-    cout << endl;
     cout << "# Cols: ";
     cin >> cols;
     cin.ignore();
-    cout << endl;
     cout << "# Mines: ";
     cin >> numMines;
     cin.ignore();
-    cout << endl << endl;
+    cout << endl;
     
     Game minesweeper(rows, cols, numMines);
-    Grid * grid = minesweeper.getGrid();
     
     string o;
     
     while (!minesweeper.isFinished())
     {
-        cout << "(1) Print board" << endl;
+        cout << "(1) Print Board" << endl;
         cout << "(2) Toggle Flag Mode" << endl;
         cout << "(3) Process Square" << endl << endl;
         
         getline(cin, o);
         int choice = o.at(0) - '0';
-        cout << endl << endl;
+        cout << endl;
         
         switch (choice)
         {
             case 1:
-                cout << grid->toString() << endl;
+                cout << minesweeper.toString() << endl;
                 break;
             
             case 2:
-                grid->toggleFlagMode();
+                minesweeper.toggleFlagMode();
                 break;
-            
+                
             case 3:
-                cout << "Enter the row and column for the square on the same line " <<
-                        "with a whitespace in between(i.e. \"1 2\"): ";
+                cout << "Enter the row and column indeces for the square on the same line " <<
+                "with a whitespace in between(i.e. \"1 2\"): ";
                 getline(cin, o);
                 cout << endl;
                 stringstream ss(o);
                 string _row, _col;
                 ss >> _row;
                 ss >> _col;
-                int r = _row.at(0) - '0';
-                int c = _col.at(0) - '0';
-                grid->processClickForSquareAt(r, c);
+                int r = atoi(_row.c_str());
+                int c = atoi(_col.c_str());
+                minesweeper.processClickForSquareAt(r, c);
+                cout << minesweeper.toString() << endl;
                 break;
         }
     }
     
-    cout << endl << ((minesweeper.victoryAchieved()) ? "You won" : "You lost") << endl << endl;
-    
-    cout << grid->toString() << endl;
+    cout << ((minesweeper.victoryAchieved()) ? "You won" : "You lost") << endl << endl;
     
     return 0;
 }

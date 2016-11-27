@@ -18,25 +18,31 @@
 #include <sstream>
 #include <iostream>
 #include <vector>
+#include <random>
 
 using namespace std;
 
 class Square
 {
 protected:
-    bool explosive = false,
-         revealed = false;
-    int flagged = 0;
-    Square * northWestNeighbor = nullptr;
-    Square * northCentralNeighbor = nullptr;
-    Square * northEastNeighbor = nullptr;
-    Square * westCentralNeighbor = nullptr;
-    Square * eastCentralNeighbor = nullptr;
-    Square * southWestNeighbor = nullptr;
-    Square * southCentralNeighbor = nullptr;
-    Square * southEastNeighbor = nullptr;
+    bool explosive, revealed;
+    int flagged;
+    Square * northWestNeighbor;
+    Square * northCentralNeighbor;
+    Square * northEastNeighbor;
+    Square * westCentralNeighbor;
+    Square * eastCentralNeighbor;
+    Square * southWestNeighbor;
+    Square * southCentralNeighbor;
+    Square * southEastNeighbor;
     
 public:
+    Square() : explosive(false), revealed(false), flagged(0),
+               northWestNeighbor(nullptr), northCentralNeighbor(nullptr),
+               northEastNeighbor(nullptr), westCentralNeighbor(nullptr),
+               eastCentralNeighbor(nullptr), southWestNeighbor(nullptr),
+               southCentralNeighbor(nullptr), southEastNeighbor(nullptr)
+    {}
     void setExplosive(bool hasMine){explosive = hasMine;}
     void setFlag(int flag)
     {
@@ -55,7 +61,7 @@ public:
     }
     void reveal(void)
     {
-        if (!isRevealed())
+        if (!isRevealed() && !isFlagged())
         {
             revealed = true;
             
@@ -173,33 +179,36 @@ public:
         {
             if (isFlagged())
             {
-                if (flagged == 1)
-                    return '!';
+                if (getFlag() == 1)
+                    return '!'; //indicates a flag
                 else
-                    return '?';
+                    return '?'; //indicates an uncertainty -> occurs when trying to reveal a flagged square
             }
             else
-                return '#';
+                return '#'; //indicates unrevealed square
         }
+        else if (getFlag() == 1 && !hasMine())
+            return 'X';  //indicates a misflag (no mine present)
         
         if (hasMine())
-            return '*';
+            return '*'; //indicates a revealed mine -> loss
         
         if (getNumberClue() == 0)
-            return '-';
+            return '-'; //indicates an "empty" revealed square with no mines in close proximity
         
-        return getNumberClue() + '0';
+        return getNumberClue() + '0'; //indicates a revealed square with mines in close proximity
     }
 };
 
-class Grid
+class Game
 {
 protected:
     Square * gridPtr;
     int rows, columns, numMines;
-    bool flagMode = false, minesPlanted = false;
+    bool flagMode, minesPlanted;
 public:
-    Grid(int rows, int cols, int numMines) : rows(rows), columns(cols), numMines(numMines)
+    Game(int rows, int cols, int numMines) : rows(rows), columns(cols), numMines(numMines), flagMode(false),
+                                             minesPlanted(false)
     {
         gridPtr = new Square [rows * cols];
         
@@ -237,7 +246,7 @@ public:
             }
         }
     }
-    ~Grid(void){delete [] gridPtr;}
+    ~Game(void){delete [] gridPtr;}
     void toggleFlagMode(void){flagMode = !flagMode;}
     bool isFlagMode(void){return flagMode;}
     bool hasDetonatedMine(void)
@@ -252,9 +261,27 @@ public:
         
         return false;
     }
+    int getNumVisibleFlags(void) //does not include uncertainty flags
+    {
+        int numFlags = 0;
+        
+        for (int i = 0; i < rows * columns; i++)
+        {
+            if (!(gridPtr + i)->isRevealed() && (gridPtr + i)->getFlag() == 1)
+            {
+                numFlags++;
+            }
+        }
+        
+        return numFlags;
+    }
     int getNumMines(void)
     {
         return numMines;
+    }
+    int getNumUnusedFlags(void)
+    {
+        return numMines - getNumVisibleFlags();
     }
     int getNumUnrevealedSquares(void)
     {
@@ -266,15 +293,37 @@ public:
         
         return num;
     }
-    //Returns true if results of process differ from initial values
+    //Returns true if changes to the board were made
     bool processClickForSquareAt (int row, int col)
     {
+        if (isFinished())
+            return false;
+        
+        bool success;
+        
         if (isFlagMode())
-        {
-            return processToggleFlagForSquareAt(row, col);
-        }
+            success = processToggleFlagForSquareAt(row, col);
         else
-            return processRevealForSquareAt(row, col);
+            success = processRevealForSquareAt(row, col);
+        
+        if (isFinished())
+        {
+            if (victoryAchieved())
+            {
+                for (int i = 0; i < rows * columns; i++)
+                    if (!(gridPtr + i)->isRevealed() && (gridPtr + i)->hasMine())
+                        (gridPtr + i)->setFlag(1);
+            }
+            else
+            {
+                for (int i = 0; i < rows * columns; i++)
+                    if (!(gridPtr + i)->isRevealed())
+                        (gridPtr + i)->reveal();
+            }
+        }
+        
+        return success;
+        
     }
     //Returns true if reveal was successful
     bool processRevealForSquareAt(int row, int col)
@@ -298,7 +347,7 @@ public:
                 if (s->getFlag() == 1)
                     s->setFlag(2);
                 else
-                    s->setFlag(0);
+                    s->setFlag(1);
             }
             else
                 s->reveal();
@@ -312,12 +361,15 @@ public:
     {
         Square * s = (gridPtr + (row * columns) + col);
         
-        if (s->isRevealed())
+        if (s->isRevealed()) //num unused flags will never be less than 0, it's just good practice
         {
             return false;
         }
         else
         {
+            if (!s->isFlagged() && getNumUnusedFlags() <= 0)
+                return false;
+            
             s->toggleFlag();
             return true;
         }
@@ -341,18 +393,22 @@ public:
                 if (gridPtr + i != omit)
                     sampleBatch.push_back(gridPtr + i);
             
-            srand(time_t(0));
+            random_device rd;
+            
+            mt19937 rng(rd());
+            
+            uniform_int_distribution<uint32_t> dist(0, (int)(sampleBatch.size() - 1));
             
             for (int k = 0; k < numMines; k++)
             {
-                int offset = rand() % sampleBatch.size();
-                Square * mineSquare = sampleBatch.at(offset);
+                uint32_t randIndex = dist(rng) % sampleBatch.size();
+                Square * mineSquare = sampleBatch.at(randIndex);
                 mineSquare->setExplosive(true);
                 
                 vector<Square *> modifiedBatch;
                 for (int i = 0; i < sampleBatch.size(); i++)
                 {
-                    if (i != offset)
+                    if (i != randIndex)
                         modifiedBatch.push_back(sampleBatch.at(i));
                 }
                 sampleBatch.swap(modifiedBatch);
@@ -379,27 +435,10 @@ public:
         
         return ss.str();
     }
-    
-};
-
-class Game
-{
-protected:
-    Grid * grid;
-public:
-    Game(int rows, int cols, int numMines)
-    {
-        grid = new Grid (rows, cols, numMines);
-    }
-    ~Game(void){delete grid;}
-    Grid * getGrid(void){return grid;}
-    bool victoryAchieved(void){return grid->getNumUnrevealedSquares() == grid->getNumMines();}
-    bool isDefeat(void){return grid->hasDetonatedMine();}
+    bool victoryAchieved(void){return (getNumUnrevealedSquares() == getNumMines() && !isDefeat());}
+    bool isDefeat(void){return hasDetonatedMine();}
     bool isFinished(void){return (victoryAchieved() || isDefeat());}
-    void reset(void)
-    {
-        grid->reset();
-    }
+    
 };
 
 #endif /* Game_h */
