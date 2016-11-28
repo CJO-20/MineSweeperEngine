@@ -44,6 +44,7 @@ public:
                southCentralNeighbor(nullptr), southEastNeighbor(nullptr)
     {}
     void setExplosive(bool hasMine){explosive = hasMine;}
+    void setRevealed(bool revealed){this->revealed = revealed;}
     void setFlag(int flag)
     {
         flagged = flag;
@@ -311,14 +312,19 @@ public:
             if (victoryAchieved())
             {
                 for (int i = 0; i < rows * columns; i++)
-                    if (!(gridPtr + i)->isRevealed() && (gridPtr + i)->hasMine())
-                        (gridPtr + i)->setFlag(1);
+                    if (!(gridPtr + i)->isRevealed())
+                    {
+                        if ((gridPtr + i)->hasMine())
+                            (gridPtr + i)->setFlag(1);
+                        
+                        (gridPtr + i)->setRevealed(true);
+                    }
             }
             else
             {
                 for (int i = 0; i < rows * columns; i++)
                     if (!(gridPtr + i)->isRevealed())
-                        (gridPtr + i)->reveal();
+                        (gridPtr + i)->setRevealed(true);
             }
         }
         
