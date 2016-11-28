@@ -316,8 +316,8 @@ public:
                     {
                         if ((gridPtr + i)->hasMine())
                             (gridPtr + i)->setFlag(1);
-                        
-                        (gridPtr + i)->setRevealed(true);
+                        else
+                            (gridPtr + i)->setRevealed(true);
                     }
             }
             else
